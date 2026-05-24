@@ -373,10 +373,11 @@ function speakLine(){
   if(dIdx>=dialogue.length) return;
   const line=dialogue[dIdx];
   utterance=new SpeechSynthesisUtterance(line.t);
-  const isSara=(line.s==='Sara');
-  utterance.voice=getVoice(isSara?'f':'m');
-  utterance.rate=isSara?0.9:0.8;
-  utterance.pitch=isSara?1.4:0.6;
+  // Maria is the female speaker in this dialogue; everyone else (Teacher/Eunice) uses the alternate voice.
+  const isFemale=(line.s==='Maria');
+  utterance.voice=getVoice(isFemale?'f':'m');
+  utterance.rate=isFemale?0.9:0.8;
+  utterance.pitch=isFemale?1.4:0.6;
   utterance.onend=()=>{dIdx++;setTimeout(speakLine,600)};
   synth.speak(utterance);
 }
@@ -662,6 +663,7 @@ function submitToTeacher(){
   const pct=Math.round((sc.l+sc.v+sc.w+sc.s+sc.g)/57*100);
   const wt=writingText||document.getElementById('writingText').value.trim()||'';
   const st=spokenTranscript||document.getElementById('speakTranscriptText').textContent||'';
+  const teacher=document.getElementById('teacherName').value||'';
 
   const form=document.createElement('form');
   form.method='POST';
@@ -680,7 +682,7 @@ function submitToTeacher(){
     'entry.543147037':pct+'%',
     'entry.301386877':wt,
     'entry.879060890':st,
-    'entry.1451249480':'A1'
+    'entry.1451249480':teacher
   };
   Object.keys(fields).forEach(key=>{
     const input=document.createElement('input');
