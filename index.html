@@ -242,7 +242,7 @@ Escribe 5 oraciones usando pronombres y el verbo "to be". | اكتب 5 جمل ب
 <div class="progress"><div class="progress-bar" style="width:80%"></div></div>
 <h2>🎤 4. Speaking <span>— Role Play: Meeting Someone</span></h2>
 <div class="speaking-prompt">
-<p><strong>Record yourself reading this role play (both parts A and B) — up to 15 seconds:</strong></p>
+<p><strong>Record yourself reading this role play (both parts A and B) — up to 30 seconds:</strong></p>
 <p style="margin-top:8px">
 A: Hello! How are you?<br>
 B: Hi! I am good, thank you.<br>
@@ -257,7 +257,7 @@ B: I live in [your city].
 </p>
 </div>
 <div class="trilingual">
-Grábate leyendo este diálogo. | سجل نفسك وأنت تقرأ هذا الحوار. | Grave-se lendo este diálogo.
+Grábate leyendo este diálogo (máximo 30 segundos). | سجل نفسك وأنت تقرأ هذا الحوار (حتى 30 ثانية). | Grave-se lendo este diálogo (até 30 segundos).
 </div>
 <div class="status-text" id="statusText">Tap the microphone to start recording</div>
 <div class="timer" id="recTimer" style="display:none">0:00</div>
@@ -322,8 +322,7 @@ function setTeacher(sel){var opt=sel.options[sel.selectedIndex];var t=document.g
 
 const SESSION='Class 2';
 const COURSE='PS1 (A1)';
-// Classes 1-4 = 15s, 5-8 = 20s, 9-12 = 25s, 13-14 = 30s
-const SPEAKING_LIMIT=15;
+const SPEAKING_LIMIT=30;
 let sn='',sClass='',sc={l:0,v:0,w:0,s:0,g:0};
 let writingText='',spokenTranscript='';
 const answers={lq1:'a',lq2:'b',lq3:'c'};
@@ -351,8 +350,8 @@ const dialogue=[
 {s:'Maria',t:'M. A. R. I. A.'},
 {s:'Teacher',t:'Where are you from?'},
 {s:'Maria',t:'I am from Mexico. And you?'},
-{s:'Teacher',t:'I am from the Philippines. Where do you liv?'},
-{s:'Maria',t:'I liv in New York.'}
+{s:'Teacher',t:'I am from the Philippines. Where do you live?'},
+{s:'Maria',t:'I live in New York.'}
 ];
 let dIdx=0;
 function getVoice(gender){
@@ -373,7 +372,6 @@ function speakLine(){
   if(dIdx>=dialogue.length) return;
   const line=dialogue[dIdx];
   utterance=new SpeechSynthesisUtterance(line.t);
-  // Maria is the female speaker in this dialogue; everyone else (Teacher/Eunice) uses the alternate voice.
   const isFemale=(line.s==='Maria');
   utterance.voice=getVoice(isFemale?'f':'m');
   utterance.rate=isFemale?0.9:0.8;
@@ -459,49 +457,47 @@ document.getElementById('wc').textContent=t?t.split(/\s+/).filter(Boolean).lengt
 function checkWriting(){
   const t=document.getElementById('writingText').value.trim();
   const words=t?t.split(/\s+/).filter(Boolean):[];
-  let pts=0;const details=[];
   writingText=t;
   const fb=document.getElementById('writingFeedback');
   const lower=t.toLowerCase();
 
   if(words.length===0){
     sc.w=0;
-    fb.innerHTML='<h3>✅ Feedback</h3><p><strong>Score: 0/20</strong></p><p style="color:#888">Nothing written yet — try to write 5 sentences using I am, he is, she is, it is, we are, they are, you are.</p>';
+    fb.innerHTML='<h3>✅ Feedback</h3><p><strong>Score: 0/20</strong></p><p style="color:#888">Nothing written yet — try to write 5 sentences using a pronoun and the verb "to be", e.g. "I am a student. She is a teacher."</p>';
     fb.style.display='block';
     document.getElementById('writingNext').disabled=false;
     return;
   }
 
-  // Session 2 grammar point: verb "to be" with subject pronouns
-  if(/\bi am\b/.test(lower)){pts+=4;details.push('✅ Used "I am"');}
-  else if(/\bi\b/.test(lower)){pts+=2;details.push('⚠️ Used "I" — try "I am..."');}
-  else{details.push('❌ Missing "I am"');}
+  // Task: 5 sentences using a subject pronoun + verb "to be".
+  // Score = number of correct "[pronoun] + am/is/are" sentences, up to 5, 4 pts each.
+  // Any pronoun is accepted — the task does NOT require specific ones.
+  const sentenceParts=t.split(/[.!?\n]+/).map(s=>s.trim()).filter(Boolean);
+  const beSentence=/\b(i\s+am|you\s+are|he\s+is|she\s+is|it\s+is|we\s+are|they\s+are|i'm|you're|he's|she's|it's|we're|they're)\b/i;
+  let valid=0;
+  sentenceParts.forEach(s=>{ if(beSentence.test(s)) valid++; });
+  // If they wrote it all on one line with no punctuation, fall back to counting be-phrase occurrences.
+  if(sentenceParts.length<=1){
+    const m=lower.match(/\b(i am|you are|he is|she is|it is|we are|they are|i'm|you're|he's|she's|it's|we're|they're)\b/g);
+    valid=m?m.length:0;
+  }
+  valid=Math.min(5,valid);
+  sc.w=Math.min(20,valid*4);
 
-  if(/\bhe is\b|\bshe is\b/.test(lower)){pts+=4;details.push('✅ Used "he/she is"');}
-  else if(/\bhe\b|\bshe\b/.test(lower)){pts+=2;details.push('⚠️ Used he/she — try "he is..." or "she is..."');}
-  else{details.push('❌ Missing "he is" or "she is"');}
-
-  if(/\bit is\b/.test(lower)){pts+=4;details.push('✅ Used "it is"');}
-  else if(/\bit\b/.test(lower)){pts+=2;details.push('⚠️ Used "it" — try "it is..."');}
-  else{details.push('❌ Missing "it is"');}
-
-  if(/\bwe are\b|\bthey are\b/.test(lower)){pts+=4;details.push('✅ Used "we/they are"');}
-  else if(/\bwe\b|\bthey\b/.test(lower)){pts+=2;details.push('⚠️ Used we/they — try "we are..." or "they are..."');}
-  else{details.push('❌ Missing "we are" or "they are"');}
-
-  if(/\byou are\b/.test(lower)){pts+=4;details.push('✅ Used "you are"');}
-  else if(/\byou\b/.test(lower)){pts+=2;details.push('⚠️ Used "you" — try "you are..."');}
-  else{details.push('❌ Missing "you are"');}
-
-  sc.w=Math.min(20,Math.max(0,pts));
+  // Which pronouns appeared — for friendly feedback only, never to deduct points.
+  const pronounsUsed=[];
+  [['I',/\bi\b/],['you',/\byou\b/],['he',/\bhe\b/],['she',/\bshe\b/],['it',/\bit\b/],['we',/\bwe\b/],['they',/\bthey\b/]]
+    .forEach(([label,re])=>{ if(re.test(lower)) pronounsUsed.push(label); });
 
   let msg='<h3>✅ Feedback</h3><p><strong>Score: '+sc.w+'/20</strong></p>';
   msg+='<ul style="margin:8px 0;padding-left:20px">';
-  details.forEach(d=>msg+='<li>'+d+'</li>');
+  msg+='<li>✅ Correct sentences with a pronoun + "to be": '+valid+' / 5</li>';
+  if(pronounsUsed.length) msg+='<li>Pronouns you used: '+pronounsUsed.join(', ')+'</li>';
   msg+='</ul>';
-  if(sc.w>=16) msg+='<p style="color:#27ae60;font-weight:600">Excellent! You used several different pronouns with "to be" correctly! 🌟</p>';
-  else if(sc.w>=8) msg+='<p>Good effort! Try to use more pronouns: I am, he is, she is, it is, we are, they are, you are.</p>';
-  else msg+='<p>Remember: I <strong>am</strong>, he/she/it <strong>is</strong>, we/they/you <strong>are</strong>.</p>';
+  if(sc.w>=20) msg+='<p style="color:#27ae60;font-weight:600">Excellent! 5 correct sentences with "to be"! 🌟</p>';
+  else if(sc.w>=12) msg+='<p>Good work! Write a few more sentences using a pronoun + am/is/are to reach 5.</p>';
+  else msg+='<p>Remember: I <strong>am</strong>, he/she/it <strong>is</strong>, we/they/you <strong>are</strong>. Try to write 5 sentences.</p>';
+  msg+='<p style="color:#888;font-size:13px;margin-top:6px">Tip: using more different pronouns is great practice — but any pronoun counts.</p>';
   fb.innerHTML=msg;fb.style.display='block';
   document.getElementById('writingNext').disabled=false;
 }
@@ -540,11 +536,15 @@ function startRec(){
   autoStopTimer=setTimeout(()=>stopRec(),SPEAKING_LIMIT*1000);
   recognition=new SpeechRecognition();
   recognition.continuous=false;
-  recognition.interimResults=false;
+  recognition.interimResults=true;
   recognition.lang='en-US';
   recognition.onresult=function(e){
-    spokenTranscript+=e.results[0][0].transcript+' ';
-    document.getElementById('speakTranscriptText').textContent=spokenTranscript.trim();
+    var interim='';
+    for(var i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) spokenTranscript+=e.results[i][0].transcript+' ';
+      else interim+=e.results[i][0].transcript;
+    }
+    document.getElementById('speakTranscriptText').textContent=(spokenTranscript+interim).trim();
     document.getElementById('speakTranscriptBox').style.display='block';
   };
   recognition.onerror=function(){};
@@ -558,7 +558,7 @@ function stopRec(){
   document.getElementById('micBtn').classList.remove('recording');
   document.getElementById('statusText').textContent='Checking your speaking...';
   document.getElementById('recTimer').style.display='none';
-  setTimeout(()=>scoreSpeaking(),300);
+  setTimeout(()=>scoreSpeaking(),1500);
 }
 
 
@@ -596,7 +596,6 @@ function scoreSpeaking(){
   else msg+='<p>Try again — speak clearly and say all the phrases.</p>';
   msg+='<button class="btn btn-secondary" onclick="resetSpeaking()" style="margin-top:10px">🔄 Try Again</button>';
   fb.innerHTML=msg;fb.style.display='block';
-  // Always allow continuing — 0 score still submits
   document.getElementById('speakNext').disabled=false;
   document.getElementById('statusText').textContent='Done! Review your score below.';
 }
@@ -658,44 +657,44 @@ document.getElementById('scG').textContent=sc.g+'/8';
 goTo('results');
 }
 
-
+let submitted=false;
 function submitToTeacher(){
+  if(submitted)return;
+  submitted=true;
+  var btn=document.getElementById('submitBtn');
+  if(btn){btn.disabled=true;btn.textContent='Submitting...';}
   const pct=Math.round((sc.l+sc.v+sc.w+sc.s+sc.g)/57*100);
   const wt=writingText||document.getElementById('writingText').value.trim()||'';
   const st=spokenTranscript||document.getElementById('speakTranscriptText').textContent||'';
   const teacher=document.getElementById('teacherName').value||'';
 
-  const form=document.createElement('form');
-  form.method='POST';
-  form.action='https://docs.google.com/forms/d/e/1FAIpQLSfxgLZofrw5wLjtEaU9K0xgJWqztxigBXxpHCXe2Ndi3UOpnQ/formResponse';
-  form.target='hidden_iframe';
-  form.style.display='none';
-  const fields={
-    'entry.154629934':sn||document.getElementById('studentName').value.trim(),
-    'entry.771629595':sClass||document.getElementById('className').value||'',
-    'entry.1564061356':SESSION,
-    'entry.1994438750':sc.l+'/3',
-    'entry.1169985852':sc.v+'/6',
-    'entry.66378887':sc.w+'/20',
-    'entry.665897330':sc.s+'/20',
-    'entry.1528226896':sc.g+'/8',
-    'entry.543147037':pct+'%',
-    'entry.301386877':wt,
-    'entry.879060890':st,
-    'entry.1451249480':teacher
-  };
-  Object.keys(fields).forEach(key=>{
-    const input=document.createElement('input');
-    input.type='hidden';input.name=key;input.value=fields[key];
-    form.appendChild(input);
-  });
-  let iframe=document.getElementById('hidden_iframe');
-  if(!iframe){iframe=document.createElement('iframe');iframe.name='hidden_iframe';iframe.id='hidden_iframe';iframe.style.display='none';document.body.appendChild(iframe);}
-  document.body.appendChild(form);
-  form.submit();
-  form.remove();
-  document.getElementById('submitSuccess').style.display='block';
-  document.getElementById('submitBtn').disabled=true;
+  var formData=new FormData();
+  formData.append('entry.154629934',sn||document.getElementById('studentName').value.trim());
+  formData.append('entry.771629595',sClass||document.getElementById('className').value||'');
+  formData.append('entry.1564061356',SESSION);
+  formData.append('entry.1994438750',sc.l+'/3');
+  formData.append('entry.1169985852',sc.v+'/6');
+  formData.append('entry.66378887',sc.w+'/20');
+  formData.append('entry.665897330',sc.s+'/20');
+  formData.append('entry.1528226896',sc.g+'/8');
+  formData.append('entry.543147037',pct+'%');
+  formData.append('entry.301386877',wt);
+  formData.append('entry.879060890',st);
+  formData.append('entry.1451249480',teacher);
+
+  function showSuccess(){
+    document.getElementById('submitSuccess').style.display='block';
+    if(btn){btn.textContent='Submitted ✓';btn.style.background='#27ae60';btn.disabled=true;}
+  }
+  function showFailure(){
+    submitted=false;
+    if(btn){btn.disabled=false;btn.textContent='Failed - Tap to Retry';btn.style.background='#e74c3c';}
+  }
+  var done=false;
+  var timeoutId=setTimeout(function(){if(!done){done=true;showSuccess();}},6000);
+  fetch('https://docs.google.com/forms/d/e/1FAIpQLSfxgLZofrw5wLjtEaU9K0xgJWqztxigBXxpHCXe2Ndi3UOpnQ/formResponse',{method:'POST',mode:'no-cors',body:formData})
+    .then(function(){if(done)return;done=true;clearTimeout(timeoutId);showSuccess();})
+    .catch(function(){if(done)return;done=true;clearTimeout(timeoutId);showFailure();});
 }
 
 </script>
